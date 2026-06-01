@@ -18,8 +18,17 @@ class ProfilScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Widget Ikon (Bisa dianggap sebagai foto profil)
-              const Icon(Icons.account_circle, size: 100, color: Colors.blue),
+              // Widget Ikon dengan bingkai profil
+              const CircleAvatar(
+                radius: 106,
+                backgroundColor: Color.fromARGB(255, 0, 0, 0),
+                child: CircleAvatar(
+                  radius: 100,
+                  backgroundImage: AssetImage(
+                    'endmin2.jpg',
+                  ), // Ganti dengan path gambar yang sesuai
+                ),
+              ),
 
               const SizedBox(height: 16),
 
@@ -51,7 +60,10 @@ class ProfilScreen extends StatelessWidget {
                   // Fungsi untuk menutup halaman aktif dan kembali ke sebelumnya
                   Navigator.pop(context);
                 },
-                child: const Text('Keluar / Kembali', style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  'Keluar / Kembali',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
