@@ -1,97 +1,121 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 class AddActivityScreen extends StatefulWidget {
-  const AddActivityScreen({super.key});
-  
+  // `kategoriPilihan` dibuat optional dengan default '' agar
+  // menambahkan layar ini tidak memecah pemanggil yang lama.
+  final String kategoriPilihan;
+  const AddActivityScreen({Key? key, this.kategoriPilihan = ''})
+    : super(key: key);
 
   @override
-  State<AddActivityScreen> createState() => _AddActivityState();
+  State<AddActivityScreen> createState() => _AddActivityScreenState();
 }
 
-class _AddActivityState extends State<AddActivityScreen> {
-  // Gunakan prefix underscore untuk variabel private
+class _AddActivityScreenState extends State<AddActivityScreen> {
   final TextEditingController _controllerKegiatan = TextEditingController();
-  final TextEditingController _controllernominal = TextEditingController();
+  final TextEditingController _controllerNominal = TextEditingController();
 
   @override
   void dispose() {
     _controllerKegiatan.dispose();
-    _controllernominal.dispose();
+    _controllerNominal.dispose();
     super.dispose();
   }
 
   void _simpanKegiatan() {
     final String namaKegiatan = _controllerKegiatan.text.trim();
-    final String nominal = _controllerKegiatan.text.trim();
+    final String nominalText = _controllerNominal.text.trim();
 
-    if (namaKegiatan.isEmpty || nominal.isEmpty) {
-      // Tampilkan pesan error jika input kosong atau hanya spasi
+    if (namaKegiatan.isEmpty || nominalText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Semua field harus diisi'),
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } else {
-      // Kembali ke halaman sebelumnya dengan membawa data
-      debugPrint("Data Tersimpan: $namaKegiatan - Rp$nominal");
-      Navigator.pop(context, (namaKegiatan, nominal));
+      return;
     }
+
+    final int? nominal = int.tryParse(
+      nominalText.replaceAll('.', '').replaceAll(',', ''),
+    );
+    if (nominal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nominal harus berupa angka yang valid'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final Map<String, dynamic> dataBaru = {
+      'kegiatan': namaKegiatan,
+      'nominal': nominal,
+      'kategori': widget.kategoriPilihan,
+    };
+
+    Navigator.pop(context, dataBaru);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tambah Kegiatan'),
-        centerTitle: true, // Membuat judul di tengah (opsional)
-      ),
-      body: Padding(
+      appBar: AppBar(title: const Text('Tambah Transaksi')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _controllerKegiatan,
-              textCapitalization: TextCapitalization.sentences, // Kapitalisasi otomatis
-              decoration: const InputDecoration(
-                labelText: 'Nama Kegiatan',
-                hintText: "Contoh: Beli Buku",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.edit),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _controllernominal,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                // Hanya izinkan input angka
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              decoration: const InputDecoration(
-                labelText: 'Nominal',
-                hintText: "Contoh: 50000",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.attach_money),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
+            // Tampilkan kategori jika tersedia
+            if (widget.kategoriPilihan.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
-                
+                ),
+                child: Text(
+                  'Kategori Dipilih: ${widget.kategoriPilihan}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-              onPressed: _simpanKegiatan, // Memanggil fungsi yang dipisah
-              child: Text(
-                'Simpan',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,), 
+
+              const SizedBox(height: 20),
+            ],
+
+            TextField(
+              controller: _controllerKegiatan,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Keterangan / Nama Kegiatan',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            TextField(
+              controller: _controllerNominal,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                labelText: 'Nominal Uang (Rp)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _simpanKegiatan,
+                child: const Text('Simpan Transaksi'),
               ),
             ),
           ],

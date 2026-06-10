@@ -1,79 +1,120 @@
 import 'package:flutter/material.dart';
-import 'package:cashflow/profil.dart';
-import 'package:cashflow/add_activity.dart';
+
+import 'kategori_screen.dart';
+import 'profil.dart';
 
 void main() {
-  runApp(const HomeScreen());
+  runApp(const CashFlowApp());
 }
 
-class HomeScreen extends StatelessWidget {
+class CashFlowApp extends StatelessWidget {
+  const CashFlowApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'CashFlow',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.indigo),
+      home: const HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-Widget build(BuildContext context) {
-  final List<String> daftarKegiatan = [
-  "Beli Makan Siang",
-  "Bayar Uang Kas",
-  "Beli Kuota Internet",
-  "Bensin Motor",
-  "Jajan Boba",
-  "Tabungan Mingguan",
-  "Bayar Listrik",
-  "Beli Buku Pelajaran",
-  "Main Ps",
-  "Sawer Vtuber",
-  "Beli Kopi"
-  ];
-  var scaffold3 = Scaffold(
-    appBar: AppBar(
-      title: const Text("Dashboard Keuangan"),
-      backgroundColor: Colors.indigo,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.account_circle),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ProfilScreen()),
-            );
-          },
-        ),
-      ],
-    ),
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-    floatingActionButton: FloatingActionButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddActivityScreen()),
-    );
-  },
-  tooltip: 'Tambah Kegiatan',
-  child: const Icon(Icons.add),
-),
-    body: ListView.builder(
-      itemCount: daftarKegiatan.length, // Jumlah item yang muncul
-      itemBuilder: (context, index) {
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: index % 2 == 0 ? Colors.blue : Colors.green,
-              child:  Icon(Icons.monetization_on, color: Colors.white),
-            ),
-            title: Text(daftarKegiatan[index]), // Ambil data sesuai urutan index)
-            subtitle: const Text("Hari ini"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              print("Anda mengklik {daftarKegiatan[index]}");
+class _HomeScreenState extends State<HomeScreen> {
+  final List<Map<String, dynamic>> daftarTransaksi = [
+    {'kegiatan': 'Beli Makan Siang', 'nominal': 25000, 'kategori': 'Makanan'},
+    {'kegiatan': 'Bayar Uang Kas', 'nominal': 50000, 'kategori': 'Belanja'},
+    {
+      'kegiatan': 'Beli Kuota Internet',
+      'nominal': 75000,
+      'kategori': 'Hiburan',
+    },
+  ];
+
+  IconData _iconForKategori(String? kategori) {
+    switch (kategori) {
+      case 'Makanan':
+        return Icons.restaurant;
+      case 'Transportasi':
+        return Icons.directions_car;
+      case 'Belanja':
+        return Icons.shopping_bag;
+      case 'Hiburan':
+        return Icons.sports_esports;
+      case 'Tagihan':
+        return Icons.receipt_long;
+      case 'Pemasukan':
+        return Icons.savings;
+      default:
+        return Icons.monetization_on;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard Keuangan'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilScreen()),
+              );
             },
           ),
-        );
-      },
-    ),
-  );
-  var scaffold2 = scaffold3;
-  var scaffold = scaffold2;
-  return scaffold;
-}
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final hasilDataTransaksi = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => KategoriScreen()),
+          );
+
+          if (hasilDataTransaksi != null &&
+              hasilDataTransaksi is Map<String, dynamic>) {
+            setState(() {
+              daftarTransaksi.add(hasilDataTransaksi);
+            });
+          }
+        },
+        child: const Icon(Icons.add),
+        tooltip: 'Tambah Kegiatan',
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        itemCount: daftarTransaksi.length,
+        itemBuilder: (context, index) {
+          final transaksi = daftarTransaksi[index];
+          final kategori = transaksi['kategori'] as String?;
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: index.isEven ? Colors.indigo : Colors.green,
+                child: Icon(_iconForKategori(kategori), color: Colors.white),
+              ),
+              title: Text(transaksi['kegiatan'] ?? 'Transaksi baru'),
+              subtitle: Text(kategori ?? 'Kategori tidak diketahui'),
+              trailing: Text('Rp ${transaksi['nominal'] ?? 0}'),
+              onTap: () {
+                debugPrint('Anda mengklik ${transaksi['kegiatan']}');
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
